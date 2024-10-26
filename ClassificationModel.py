@@ -33,14 +33,19 @@ def GenerateResModel(num_classes: int) -> Model:
         input_shape=(256, 256, 3) # Specify input shape
     )
     
-    for layer in res_model.layers[:]:  # Freeze all layers 
-        layer.trainable = False
-    
+    ## freeze some layer 
+    # res_model.trainable = True #all'inizio è già così
+    # for layer in res_model.layers[:]:  # Freeze all layers 
+    #     layer.trainable = False
+
+    res_model.trainable = False
+
     x = res_model.output
     # x = MaxPooling2D()(x)
-    x = Flatten()(x)
-    x = Dropout(0.5)(x)  # Dropout per regolarizzazione
+    # x = Flatten()(x)
+    x = GlobalAveragePooling2D()(x)
     x = Dense(64, activation='relu')(x)
+    x = Dropout(0.5)(x)  # Dropout per regolarizzazione
     predictions = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=res_model.input, outputs=predictions)
 
@@ -60,6 +65,7 @@ def GenerateCNN(num_classes: int) -> Model:
                     padding='same',             # Padding (stessa dimensione dell'input)
                     activation='relu')(input_layer)
     x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Dropout(0.25)(x)  # Dropout 
     # Secondo livello convoluzionale
     x = layers.Conv2D(filters=64,               # Numero di filtri
                     kernel_size=(3, 3),         # Dimensione del kernel
@@ -67,6 +73,7 @@ def GenerateCNN(num_classes: int) -> Model:
                     padding='same',             # Padding (stessa dimensione dell'input)
                     activation='relu')(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Dropout(0.25)(x)  # Dropout 
     # Twerzo livello convoluzionale
     x = layers.Conv2D(filters=128,               # Numero di filtri
                     kernel_size=(3, 3),         # Dimensione del kernel
@@ -74,10 +81,13 @@ def GenerateCNN(num_classes: int) -> Model:
                     padding='same',             # Padding (stessa dimensione dell'input)
                     activation='relu')(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Dropout(0.25)(x)  # Dropout 
     # Flatten per passare al classificatore denso
     x = Flatten()(x)
     x = Dense(256, activation='relu')(x)
+    x = Dropout(0.5)(x)  # Dropout 
     x = Dense(64, activation='relu')(x)
+    x = Dropout(0.5)(x)  # Dropout 
     predictions = Dense(num_classes, activation='softmax')(x)  # Output con 10 classi
 
     model = Model(inputs=input_layer, outputs=predictions)
