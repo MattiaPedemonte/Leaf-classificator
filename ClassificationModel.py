@@ -1,7 +1,7 @@
 # CNN for classification on Grapevine leaves
 from importLibrary import *
 
-def GenerateModel(num_classes: int) -> Model:
+def GenerateVGG19Model(num_classes: int) -> Model:
     # Load the VGG19 model without the top layer (i.e., the fully connected layers)
     vgg19_model = tf.keras.applications.VGG19(
         include_top=False,        # Exclude the top layer
@@ -19,6 +19,32 @@ def GenerateModel(num_classes: int) -> Model:
     # x = Dense(64, activation='relu')(x)
     predictions = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=vgg19_model.input, outputs=predictions)
+
+    # Check the model summary
+    model.summary()
+
+    return model
+
+def GenerateVGG16Model(num_classes: int) -> Model:
+    # Load the VGG16 model without the top layer (i.e., the fully connected layers)
+    vgg16_model = tf.keras.applications.VGG16(
+        include_top=False,        # Exclude the top layer
+        weights='imagenet',      # Load pre-trained weights from ImageNet
+        input_shape=(256, 256, 3) # Specify input shape
+    )
+    
+    # for layer in vgg16_model.layers[:-4]:  # Freeze all layers except the last 4
+    #     layer.trainable = False
+    vgg16_model.trainable = False
+
+    x = vgg16_model.output
+    x = GlobalAveragePooling2D()(x)
+    # x = Flatten()(x)
+    x = Dropout(0.5)(x)  # Dropout per regolarizzazione
+    x = Dense(64, activation='relu')(x)
+    x = Dropout(0.25)(x)  # Dropout per regolarizzazione
+    predictions = Dense(num_classes, activation='softmax')(x)
+    model = Model(inputs=vgg16_model.input, outputs=predictions)
 
     # Check the model summary
     model.summary()
